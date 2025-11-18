@@ -13,6 +13,7 @@ class User(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     role = db.Column(db.String(50), nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)  # Добавляем email
     notifications = db.relationship('Notification', backref='user', lazy=True)
 
     def __repr__(self):
@@ -26,6 +27,7 @@ class Notification(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     message = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    type = db.Column(db.String(50), nullable=False, default='info')  # Тип уведомления
 
     def __repr__(self):
         return f'<Notification {self.id}>'
@@ -65,6 +67,9 @@ class Booking(db.Model):
     date = db.Column(db.DateTime, nullable=False)
     duration = db.Column(db.Integer, nullable=False)
     description = db.Column(db.Text)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)  # Добавляем пользователя
+    status = db.Column(db.String(20), default='pending')  # Статус бронирования
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     def __repr__(self):
         return f'<Booking {self.id}>'
@@ -108,12 +113,13 @@ def add_sample_data():
         )
 
         # Создаем тестовых пользователей
-        teacher = User(role="преподаватель")
-        student = User(role="студент")
-        admin = User(role="администратор")
+        teacher = User(role="преподаватель", email="teacher@university.edu")
+        student = User(role="студент", email="student@university.edu")
+        admin1 = User(role="администратор", email="oleshkasok@gmail.com")
+        admin2 = User(role="администратор", email="oleshkasok2@gmail.com")
 
         # Добавляем все в сессию
-        db.session.add_all([classroom1, classroom2, teacher, student, admin])
+        db.session.add_all([classroom1, classroom2, teacher, student, admin1, admin2])
         db.session.commit()
 
         print("✅ Тестовые данные успешно добавлены!")
