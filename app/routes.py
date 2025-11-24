@@ -1,8 +1,11 @@
 """
 Маршруты API для University Management System
 """
-from flask import jsonify
-from models import Classroom, User, Schedule, Booking, db
+from flask import jsonify, request
+from models import Classroom, User, Schedule, Booking, Notification, Pricing, db
+from email_service import email_service
+from datetime import datetime
+from sqlalchemy import func
 
 
 def init_routes(app):
@@ -10,82 +13,130 @@ def init_routes(app):
     Инициализация всех маршрутов приложения
     """
 
-    @app.route('/')
-    def index():
-        return jsonify({
-            "message": "University Management System API",
-            "version": "1.0",
-            "endpoints": {
-                "classrooms": "/classrooms",
-                "users": "/users",
-                "schedules": "/schedules",
-                "bookings": "/bookings"
-            }
-        })
+    # ... существующие маршруты (index, list_classrooms, и т.д.) ...
 
-    @app.route('/classrooms')
-    def list_classrooms():
-        """Получить список всех аудиторий"""
-        classrooms = Classroom.query.all()
+    @app.route('/statistics/top_profitable_classrooms')
+    def top_profitable_classrooms():
+        """Статистика самых прибыльных аудиторий"""
+        try:
+            # Агрегируем данные: группируем по аудитории, суммируем общую выручку
+            stats = db.session.query(
+                Classroom.number,
+                Classroom.description,
+                Classroom.capacity,
+                Pricing.price_per_hour,
+                func.sum(Booking.total_cost).label('total_revenue'),
+                func.count(Booking.id).label('booking_count'),
+                func.avg(Booking.duration).label('avg_duration')
+            ).join(
+                Pricing, Classroom.number == Pricing.classroom_number
+            ).join(
+                Booking, Classroom.number == Booking.classroom_number
+            ).filter(
+                Booking.status == 'approved'  # Учитываем только подтвержденные бронирования
+            ).group_by(
+                Classroom.number, Classroom.description, Classroom.capacity, Pricing.price_per_hour
+            ).order_by(
+                func.sum(Booking.total_cost).desc()  # Сортируем по убыванию выручки
+            ).all()
+
+            # Форматируем результат для JSON
+            result = []
+            for stat in stats:
+                result.append({
+                    'classroom_number': stat.number,
+                    'description': stat.description,
+                    'capacity': stat.capacity,
+                    'price_per_hour': float(stat.price_per_hour) if stat.price_per_hour else 0,
+                    'total_revenue': float(stat.total_revenue) if stat.total_revenue else 0,
+                    'booking_count': stat.booking_count,
+                    'avg_duration': float(stat.avg_duration) if stat.avg_duration else 0,
+                    'revenue_per_booking': float(stat.total_revenue) / stat.booking_count if stat.booking_count else 0
+                })
+
+            return jsonify({
+                'success': True,
+                'statistics': {
+                    'top_profitable_classrooms': result,
+                    'total_revenue_all': sum(item['total_revenue'] for item in result),
+                    'total_bookings_all': sum(item['booking_count'] for item in result)
+                }
+            })
+
+        except Exception as e:
+            return jsonify({
+                'success': False,
+                'error': f'Failed to calculate statistics: {str(e)}'
+            }), 500
+
+    @app.route('/pricing')
+    def list_pricing():
+        """Получить список цен для аудиторий"""
+        pricing = Pricing.query.all()
         return jsonify({
-            'classrooms': [
+            'pricing': [
                 {
-                    'number': c.number,
-                    'equipment': c.equipment,
-                    'capacity': c.capacity,
-                    'description': c.description
-                } for c in classrooms
+                    'id': p.id,
+                    'classroom_number': p.classroom_number,
+                    'price_per_hour': float(p.price_per_hour) if p.price_per_hour else 0
+                } for p in pricing
             ]
         })
 
-    @app.route('/users')
-    def list_users():
-        """Получить список всех пользователей"""
-        users = User.query.all()
-        return jsonify({
-            'users': [
-                {
-                    'id': u.id,
-                    'role': u.role
-                } for u in users
-            ]
-        })
+    # Обновляем создание бронирования для автоматического расчета стоимости
+    @app.route('/bookings', methods=['POST'])
+    def create_booking():
+        """Создание нового бронирования с автоматическим расчетом стоимости"""
+        try:
+            data = request.get_json()
 
-    @app.route('/schedules')
-    def list_schedules():
-        """Получить расписание"""
-        schedules = Schedule.query.all()
-        return jsonify({
-            'schedules': [
-                {
-                    'id': s.id,
-                    'classroom': s.classroom_number,
-                    'lesson': s.lesson,
-                    'date': s.date.isoformat() if s.date else None
-                } for s in schedules
-            ]
-        })
+            # Проверяем обязательные поля
+            required_fields = ['classroom_number', 'date', 'duration', 'user_id']
+            for field in required_fields:
+                if field not in data:
+                    return jsonify({'error': f'Missing required field: {field}'}), 400
 
-    @app.route('/bookings')
-    def list_bookings():
-        """Получить список бронирований"""
-        bookings = Booking.query.all()
-        return jsonify({
-            'bookings': [
-                {
-                    'id': b.id,
-                    'classroom': b.classroom_number,
-                    'date': b.date.isoformat() if b.date else None,
-                    'duration': b.duration,
-                    'description': b.description
-                } for b in bookings
-            ]
-        })
+            # Проверяем существование пользователя
+            user = User.query.get(data['user_id'])
+            if not user:
+                return jsonify({'error': 'User not found'}), 404
 
-    @app.route('/health')
-    def health_check():
-        """Проверка здоровья приложения"""
-        return jsonify({
-            "status": "healthy",
-            "database": "connected"  # Можно добавить проверку подключения к БД
-        })
+            # Проверяем существование аудитории
+            classroom = Classroom.query.get(data['classroom_number'])
+            if not classroom:
+                return jsonify({'error': 'Classroom not found'}), 404
+
+            # Получаем цену за аудиторию
+            pricing = Pricing.query.filter_by(classroom_number=data['classroom_number']).first()
+            if not pricing:
+                return jsonify({'error': 'Pricing not found for this classroom'}), 400
+
+            # Рассчитываем общую стоимость
+            total_cost = pricing.price_per_hour * data['duration']
+
+            # Создаем бронирование
+            new_booking = Booking(
+                classroom_number=data['classroom_number'],
+                date=datetime.fromisoformat(data['date'].replace('Z', '+00:00')),
+                duration=data['duration'],
+                description=data.get('description', ''),
+                user_id=data['user_id'],
+                status='pending',
+                total_cost=total_cost
+            )
+
+            db.session.add(new_booking)
+            db.session.commit()
+
+            # ... остальной код создания бронирования (уведомления, emails) ...
+
+            return jsonify({
+                'message': 'Booking created successfully',
+                'booking_id': new_booking.id,
+                'status': new_booking.status,
+                'total_cost': float(total_cost)
+            }), 201
+
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({'error': f'Failed to create booking: {str(e)}'}), 500
