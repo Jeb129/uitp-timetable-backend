@@ -11,7 +11,7 @@ import threading
 
 # --- 1. Конфигурация ---
 INPUT_FILE = "events/auth_id.txt"   # Файл с нужными ID аудиторий
-UPDATE_DELAY = 1 # интервал обновления в часах
+UPDATE_DELAY = 0.05 # интервал обновления в часах
 
 STATUS_FILE = "events/update_status.json"
 ICAL_DIR = "events/ical_files"      # Куда сохранять .ics файлы
@@ -101,9 +101,9 @@ def update_audit_rasp(eios_aud_id):
 
     try:
         if get_aud_ics(eios_aud_id):
-            logging.info(f"Успешно скачан ics файл для ID {eios_aud_id}")
+            #logging.info(f"Успешно скачан ics файл для ID {eios_aud_id}")
             ics_to_fullcalendar_json(eios_aud_id)
-            logging.info(f'{eios_aud_id}.ics сохранено в json')
+            #logging.info(f'{eios_aud_id}.ics сохранено в json')
             return True
         else:
             logging.warning(f"Пустой ответ для ID: {eios_aud_id}")
@@ -151,7 +151,6 @@ def get_website_update_date(eios_aud_id):
         if update_date_str:
             return update_date_str
         else:
-            logging.warning("Поле 'dateUploadingRasp' не найдено в ответе API.")
             return None
     except Exception as e:
         return None
@@ -167,32 +166,35 @@ def check_updates(audit_ids):
         local_request_str = update_status.get(id)
         if not local_request_str:
             updates.append(id)
-            logging.info(f"Нет локальных данных")
+            logging.info(f"Нет локальных данных.")
             continue # Если локальной информации нет - запрашиваем из eios
 
         try:
             local_request_dt = datetime.fromisoformat(local_request_str)
             if now - local_request_dt < timedelta(hours=UPDATE_DELAY):
-                logging.info(f"Информация обновлялась {local_request_str}. Запрос к eios не требуется")
+                # logging.info(f"Информация обновлялась {local_request_str}. Запрос к eios не требуется")
                 continue
 
             logging.info(f"Проверка даты обновления через API...")
             remote_update_str = get_website_update_date(id)
 
-            if remote_update_str:
-                logging.info(f"Найдена дата в API: {remote_update_str}")
-            else:
-                logging.error(f"Ошибка при получении даты с сайта:")
+            # if remote_update_str:
+            #     logging.info(f"Найдена дата в API: {remote_update_str}")
+            # else:
+            #     logging.error(f"Ошибка при получении даты с сайта:")
 
             if isinstance(remote_update_str, datetime):
                 remote_update_str = remote_update_str.isoformat()
-            remote_update_dt = datetime.fromisoformat(local_request_str)
+            remote_update_dt = datetime.fromisoformat(remote_update_str)
 
             if remote_update_dt < local_request_dt:
-                logging.info(f"Расписание не обновилось на портале. Обновление не требуется")
+                # logging.info(f"Расписание не обновилось на портале. Обновление не требуется")
                 continue
-            updates.append[id]
+            # else:
+            #     logging.info(f"Расписание обновилось на портале. Требуется обновление")
+            updates.append(id)
         except ValueError:
+            #logging.info(f"Ошибка при сравнении дат. Требуется обновление")
             updates.append(id)
             continue # В случае ошибки чтения обновляем информацию
     return updates if len(updates) > 0 else None
