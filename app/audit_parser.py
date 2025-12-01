@@ -9,7 +9,7 @@ import pytz
 import threading
 
 # --- 1. Конфигурация ---
-INPUT_FILE = "auth_id.txt"   # Файл с нужными ID аудиторий
+INPUT_FILE = "events/auth_id.txt"   # Файл с нужными ID аудиторий
 UPDATE_DELAY = timedelta(hours=1) # интервал обновления в часах
 
 STATUS_FILE = "events/update_status.json"
@@ -132,7 +132,6 @@ def read_aud_ids():
     '''Читаем список id аудиторий'''
      # Проверяем, что файл существует
     if not os.path.exists(INPUT_FILE):
-        logging.error(f"Файл {INPUT_FILE} не найден!")
         return
 
     # Читаем ID из файла
@@ -187,7 +186,7 @@ def check_updates(audit_ids):
         except ValueError:
             updates.append(id)
             continue # В случае ошибки чтения обновляем информацию
-    return updates if updates.count() > 0 else None
+    return updates if len(updates) > 0 else None
        
 def maina():
     # Проверяем не запущенно ли обновление?
@@ -201,7 +200,7 @@ def maina():
     if not ids:
         logging.warning("Файл auth_id.txt не найден")
         return
-    elif ids.count() == 0:
+    elif len(ids) == 0:
         logging.warning("Файл auth_id.txt пуст или не содержит корректных ID.")
         return
     
@@ -211,7 +210,7 @@ def maina():
     if not updatable_ids:
         return
     
-    logging.info(f"Требуется обновить {updatable_ids.count()} аудиторий")
+    logging.info(f"Требуется обновить {len(updatable_ids)} аудиторий")
     with update_lock:
         logging.info("НАЧАЛО ОБНОВЛЕНИЯ РАСПИСАНИЯ ")
         update_status = read_status()
@@ -222,18 +221,16 @@ def maina():
         for audit_id in ids:
             if update_audit_rasp(audit_id):
                 update_status[audit_id] = datetime.now().isoformat()
+                write_status(update_status)
                 success_count += 1
             else:
                 fail_count += 1
-
             time.sleep(REQUEST_DELAY)
-
         logging.info("ОБНОВЛЕНИЕ РАСПИСАНИЯ ЗАВЕРШЕНО ")
         logging.info(f"Успешно: {success_count}, Ошибок: {fail_count}")
 
-
-if __name__ == 'main':
     # Вот эту функцию нужно циклически запускать.
     # Пока не очень понятно будем мы это контролировать через flask сервер или запускать отдельно, поэтому оставил так
-    maina()
+
+maina()
     
