@@ -166,7 +166,7 @@ def check_updates(audit_ids):
         local_request_str = update_status.get(id)
         if not local_request_str:
             updates.append(id)
-            logging.info(f"Нет локальных данных.")
+            logging.info(f"Нет локальных данных. Требуется обновление")
             continue # Если локальной информации нет - запрашиваем из eios
 
         try:
@@ -175,7 +175,7 @@ def check_updates(audit_ids):
                 # logging.info(f"Информация обновлялась {local_request_str}. Запрос к eios не требуется")
                 continue
 
-            logging.info(f"Проверка даты обновления через API...")
+            # logging.info(f"Проверка даты обновления через API...")
             remote_update_str = get_website_update_date(id)
 
             # if remote_update_str:
@@ -190,11 +190,11 @@ def check_updates(audit_ids):
             if remote_update_dt < local_request_dt:
                 # logging.info(f"Расписание не обновилось на портале. Обновление не требуется")
                 continue
-            # else:
-            #     logging.info(f"Расписание обновилось на портале. Требуется обновление")
+            else:
+                logging.info(f"Расписание обновилось на портале. Требуется обновление")
             updates.append(id)
         except ValueError:
-            #logging.info(f"Ошибка при сравнении дат. Требуется обновление")
+            logging.info(f"Ошибка при сравнении дат. Требуется обновление")
             updates.append(id)
             continue # В случае ошибки чтения обновляем информацию
     return updates if len(updates) > 0 else None
@@ -230,7 +230,7 @@ def maina():
         fail_count = 0
 
         # Основной цикл
-        for audit_id in ids:
+        for audit_id in updatable_ids:
             if update_audit_rasp(audit_id):
                 update_status[audit_id] = datetime.now().isoformat()
                 write_status(update_status)
