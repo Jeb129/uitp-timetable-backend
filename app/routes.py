@@ -2,6 +2,7 @@
 Маршруты API для University Management System
 """
 from flask import jsonify, request
+import requests
 from models import Classroom, User, Schedule, Booking, Notification, Pricing, db
 from email_service import email_service
 from datetime import datetime
@@ -12,8 +13,6 @@ def init_routes(app):
     """
     Инициализация всех маршрутов приложения
     """
-
-    # ... существующие маршруты (index, list_classrooms, и т.д.) ...
 
     @app.route('/statistics/top_profitable_classrooms')
     def top_profitable_classrooms():
@@ -140,3 +139,30 @@ def init_routes(app):
         except Exception as e:
             db.session.rollback()
             return jsonify({'error': f'Failed to create booking: {str(e)}'}), 500
+   
+    MOODLE_URL = "http://localhost:5002/webservice/rest/server.php" # Тут апи сдо должно быть но пока что локальное (кто хочет - ставьте сервер мудла себе сами.)
+    MOODLE_TOKEN = "YOUR_MOODLE_TOKEN" # Аналогично предыдущему пункту нужен  токен от сдо с правами moodle/user:viewdetails.
+    WS_FUNCTION = "core_user_get_users" # имя метода
+    @app.get("/moodle/user")
+    def get_moodle_user():
+        email = request.args.get("email")
+
+        if not email:
+            return jsonify({"error": "email parameter is required"}), 400
+
+        params = {
+            "wstoken": MOODLE_TOKEN,
+            "wsfunction": WS_FUNCTION,
+            "moodlewsrestformat": "json",
+            "criteria[0][key]": "email",
+            "criteria[0][value]": email,
+        }
+
+        try:
+            response = requests.get(MOODLE_URL, params=params, timeout=10)
+            response.raise_for_status()
+            data = response.json()
+        except requests.RequestException as e:
+            return jsonify({"error": str(e)}), 502
+
+        return jsonify(data)
