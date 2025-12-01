@@ -5,12 +5,13 @@ import requests
 import json
 from icalendar import Calendar
 from datetime import datetime, timedelta
+from apscheduler.schedulers.background import BackgroundScheduler
 import pytz
 import threading
 
 # --- 1. Конфигурация ---
 INPUT_FILE = "events/auth_id.txt"   # Файл с нужными ID аудиторий
-UPDATE_DELAY = timedelta(hours=1) # интервал обновления в часах
+UPDATE_DELAY = 1 # интервал обновления в часах
 
 STATUS_FILE = "events/update_status.json"
 ICAL_DIR = "events/ical_files"      # Куда сохранять .ics файлы
@@ -142,20 +143,17 @@ def read_aud_ids():
 # Автообновление
 def get_website_update_date(eios_aud_id):
     """Получает дату последнего обновления расписания с сайта через API."""
-    logging.info(f"Проверка даты обновления через API...")
     try:
         response = requests.get(f"{BASE_URL_ICAL}?idAudLine={eios_aud_id}", headers=HEADERS, timeout=20)
         response.raise_for_status()
         data = response.json()
         update_date_str = data.get("data", {}).get("info", {}).get("dateUploadingRasp")
         if update_date_str:
-            logging.info(f"Найдена дата в API: {update_date_str}")
             return update_date_str
         else:
             logging.warning("Поле 'dateUploadingRasp' не найдено в ответе API.")
             return None
     except Exception as e:
-        logging.error(f"Ошибка при получении даты с сайта: {e}")
         return None
 
 def check_updates(audit_ids):
@@ -165,24 +163,35 @@ def check_updates(audit_ids):
     updates = []
 
     for id in audit_ids:
+        logging.info(f"Проверяем id {id}...")
         local_request_str = update_status.get(id)
-
         if not local_request_str:
             updates.append(id)
+            logging.info(f"Нет локальных данных")
             continue # Если локальной информации нет - запрашиваем из eios
 
         try:
             local_request_dt = datetime.fromisoformat(local_request_str)
-            if now - local_request_dt < UPDATE_DELAY:
+            if now - local_request_dt < timedelta(hours=UPDATE_DELAY):
+                logging.info(f"Информация обновлялась {local_request_str}. Запрос к eios не требуется")
                 continue
 
+            logging.info(f"Проверка даты обновления через API...")
             remote_update_str = get_website_update_date(id)
+
+            if remote_update_str:
+                logging.info(f"Найдена дата в API: {remote_update_str}")
+            else:
+                logging.error(f"Ошибка при получении даты с сайта:")
+
             if isinstance(remote_update_str, datetime):
                 remote_update_str = remote_update_str.isoformat()
             remote_update_dt = datetime.fromisoformat(local_request_str)
 
-            if remote_update_dt > local_request_dt:
-                updates.append[id]
+            if remote_update_dt < local_request_dt:
+                logging.info(f"Расписание не обновилось на портале. Обновление не требуется")
+                continue
+            updates.append[id]
         except ValueError:
             updates.append(id)
             continue # В случае ошибки чтения обновляем информацию
@@ -208,6 +217,7 @@ def maina():
     updatable_ids = check_updates(ids)
 
     if not updatable_ids:
+        logging.info(f"Обновление не требуется")
         return
     
     logging.info(f"Требуется обновить {len(updatable_ids)} аудиторий")
@@ -229,8 +239,24 @@ def maina():
         logging.info("ОБНОВЛЕНИЕ РАСПИСАНИЯ ЗАВЕРШЕНО ")
         logging.info(f"Успешно: {success_count}, Ошибок: {fail_count}")
 
-    # Вот эту функцию нужно циклически запускать.
-    # Пока не очень понятно будем мы это контролировать через flask сервер или запускать отдельно, поэтому оставил так
+def task():
+    logging.info("Запуск в режиме автоматической проверки обновлений...")
+    scheduler = BackgroundScheduler(timezone=LOCAL_TIMEZONE)
+    scheduler.add_job(maina, 'interval', hours=UPDATE_DELAY, misfire_grace_time=600)
+    scheduler.start()
+    logging.info(f"Планировщик запущен. Проверка будет выполняться каждые {UPDATE_DELAY} часа.")
+    print("Скрипт работает в фоновом режиме. Нажмите Ctrl+C для выхода.")
+    try:
+        while True:
+            time.sleep(1)
+    except (KeyboardInterrupt, SystemExit):
+        scheduler.shutdown()
+        logging.info("Планировщик остановлен. Программа завершена.")
 
+# Вот эту функцию нужно повесить в фон запускать.
+# Пока не очень понятно будем мы это контролировать через flask сервер или запускать отдельно, поэтому оставил так
 maina()
+# Запуск в фоне (не через сервер)
+task()
+
     
