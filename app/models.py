@@ -37,7 +37,9 @@ class Notification(db.Model):
 class Classroom(db.Model):
     __tablename__ = 'classrooms'
 
-    number = db.Column(db.String(20), primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
+    number = db.Column(db.String(20))
+    eios_id =db.Column(db.Integer)
     equipment = db.Column(db.Text)
     capacity = db.Column(db.Integer)
     description = db.Column(db.Text)
@@ -53,7 +55,7 @@ class Pricing(db.Model):
     __tablename__ = 'pricing'
 
     id = db.Column(db.Integer, primary_key=True)
-    classroom_number = db.Column(db.String(20), db.ForeignKey('classrooms.number'), nullable=False, unique=True)
+    classroom_number = db.Column(db.String(20), db.ForeignKey('classrooms.id'), nullable=False, unique=True)
     price_per_hour = db.Column(db.Numeric(10, 2), nullable=False)  # цена за час
 
     def __repr__(self):
@@ -64,7 +66,7 @@ class Schedule(db.Model):
     __tablename__ = 'schedules'
 
     id = db.Column(db.Integer, primary_key=True)
-    classroom_number = db.Column(db.String(20), db.ForeignKey('classrooms.number'), nullable=False)
+    classroom_number = db.Column(db.String(20), db.ForeignKey('classrooms.id'), nullable=False)
     lesson = db.Column(db.String(100), nullable=False)
     date = db.Column(db.DateTime, nullable=False)
 
@@ -76,13 +78,13 @@ class Booking(db.Model):
     __tablename__ = 'bookings'
 
     id = db.Column(db.Integer, primary_key=True)
-    classroom_number = db.Column(db.String(20), db.ForeignKey('classrooms.number'), nullable=False)
+    classroom_number = db.Column(db.String(20), db.ForeignKey('classrooms.id'), nullable=False)
     date = db.Column(db.DateTime, nullable=False)
     duration = db.Column(db.Integer, nullable=False)
     description = db.Column(db.Text)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    status = db.Column(db.String(20), default='pending')
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    status = db.Column(db.Boolean, default=None)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow())
     total_cost = db.Column(db.Numeric(10, 2))  # общая стоимость бронирования
 
     def __repr__(self):

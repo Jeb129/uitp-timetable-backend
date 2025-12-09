@@ -1,11 +1,14 @@
 """
 Маршруты API для University Management System
 """
+import os
+import json
 from flask import jsonify, request
+from http import HTTPStatus
 import requests
 from models import Classroom, User, Schedule, Booking, Notification, Pricing, db
 from email_service import email_service
-from datetime import datetime
+from datetime import datetime, timedelta
 from sqlalchemy import func
 
 
@@ -143,7 +146,7 @@ def init_routes(app):
     MOODLE_URL = "http://localhost:5002/webservice/rest/server.php" # Тут апи сдо должно быть но пока что локальное (кто хочет - ставьте сервер мудла себе сами.)
     MOODLE_TOKEN = "YOUR_MOODLE_TOKEN" # Аналогично предыдущему пункту нужен  токен от сдо с правами moodle/user:viewdetails.
     WS_FUNCTION = "core_user_get_users" # имя метода
-    @app.get("/moodle/user")
+    @app.route("/moodle/user")
     def get_moodle_user():
         email = request.args.get("email")
 
@@ -166,3 +169,64 @@ def init_routes(app):
             return jsonify({"error": str(e)}), 502
 
         return jsonify(data)
+
+    @app.route("/bookings/update", methods = ['POST'])
+    def change_boocking_status():
+        data = request.get_json()
+        id = data['id']
+        status = data["status"] #Булево
+        comment = data["comment"]
+
+        booking = Booking.query.get(id)
+        if not booking:
+            return HTTPStatus.BAD_GATEWAY
+                
+        booking.status = status
+
+        notification = Notification(user_id = booking.user_id, message = f"Заявка № {id} {"одобрена" if status else "отклонена"}.\n Комментарий модерации: {comment}")
+        db.session.add(notification)
+
+        db.session.commit()
+
+    @app.route('/schedule/<int:aud_id>')
+    def get_schedule(aud_id):
+        # 1. Ищем аудиторию
+        classroom = Classroom.query.get(aud_id)
+        if not classroom:
+            return jsonify({"error": "Аудитория не найдена"}), HTTPStatus.NOT_FOUND
+
+        # 2. Загружаем бронирования из БД (только подтверждённые)
+        bookings = Booking.query.filter_by(
+            classroom_number=classroom.id,
+            status=True
+        ).all()
+
+        # 3. Преобразуем бронирования в формат FullCalendar
+        booking_events = []
+        for b in bookings:
+            event = {
+                "title": b.description or "Бронирование",
+                "start": b.date.isoformat(),
+                "end": (b.date + timedelta(minutes=b.duration)).isoformat(),
+                "extendedProps": {
+                    "booking_id": b.id,
+                    "user_id": b.user_id
+                }
+            }
+            booking_events.append(event)
+
+        # 4. Загружаем внешние JSON события
+        events_path = os.path.join("events", f"{classroom.eios_id}.json")
+        external_events = []
+
+        if os.path.exists(events_path):
+            with open(events_path, encoding='utf-8') as f:
+                try:
+                    external_events = json.load(f)
+                except Exception:
+                    external_events = []  # на случай плохого JSON
+
+        # 5. Объединяем
+        all_events = external_events + booking_events
+
+        return jsonify(all_events), HTTPStatus.OK
