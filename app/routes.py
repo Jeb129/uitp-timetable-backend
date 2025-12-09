@@ -143,7 +143,7 @@ def init_routes(app):
     MOODLE_URL = "http://localhost:5002/webservice/rest/server.php" # Тут апи сдо должно быть но пока что локальное (кто хочет - ставьте сервер мудла себе сами.)
     MOODLE_TOKEN = "YOUR_MOODLE_TOKEN" # Аналогично предыдущему пункту нужен  токен от сдо с правами moodle/user:viewdetails.
     WS_FUNCTION = "core_user_get_users" # имя метода
-    @app.get("/moodle/user")
+    @app.route("/moodle/user")
     def get_moodle_user():
         email = request.args.get("email")
 
@@ -166,3 +166,15 @@ def init_routes(app):
             return jsonify({"error": str(e)}), 502
 
         return jsonify(data)
+
+    @app.post("/bookings/update")
+    def change_boocking_status():
+        data = request.get_json()
+        id = data['id']
+        status = data["status"]
+        comment = data["comment"]
+
+        booking = Booking.query.get(id)
+        if booking:
+            booking.status = status
+        pass
