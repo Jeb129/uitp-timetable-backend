@@ -2,6 +2,7 @@
 Маршруты API для University Management System
 """
 from flask import jsonify, request
+from http import HTTPStatus
 import requests
 from models import Classroom, User, Schedule, Booking, Notification, Pricing, db
 from email_service import email_service
@@ -175,6 +176,11 @@ def init_routes(app):
         comment = data["comment"]
 
         booking = Booking.query.get(id)
-        if booking:
-            booking.status = status
+        if not booking:
+            return HTTPStatus.BAD_GATEWAY
+                
+        booking.status = status
+
+        notification = Notification(user_id = booking.user_id, message = f"По заявке {id} изменен статус.\n Комментарий модерации: {comment}")
+        
         pass
