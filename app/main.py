@@ -24,11 +24,10 @@ def create_app():
     init_routes(app)
 
     return app
-
+app = create_app()
 
 def main():
     """Главная функция запуска приложения"""
-    app = create_app()
 
     print("Запуск University Management System...")
     app.run(debug=True, host='0.0.0.0', port=5000, use_reloader=False)

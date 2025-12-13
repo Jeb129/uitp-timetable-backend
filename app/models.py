@@ -125,28 +125,28 @@ def add_sample_data():
         # Создаем тестовые аудитории
         classrooms = [
             Classroom(
+                id=1,
                 number="101",
+                eios_id=3569734,
                 equipment="Проектор, маркерная доска, кондиционер",
                 capacity=30,
                 description="Аудитория для лекций и семинаров"
             ),
             Classroom(
+                id=2,
                 number="201",
+                eios_id=3569971,
                 equipment="Компьютеры, проектор, интерактивная доска",
                 capacity=25,
                 description="Компьютерный класс"
             ),
             Classroom(
+                id=3,
                 number="301",
+                eios_id=3593392,
                 equipment="Мультимедийная система, микрофоны",
                 capacity=50,
                 description="Конференц-зал"
-            ),
-            Classroom(
-                number="102",
-                equipment="Маркерная доска",
-                capacity=20,
-                description="Малая аудитория"
             )
         ]
 
@@ -160,67 +160,67 @@ def add_sample_data():
 
         # Добавляем цены для аудиторий
         pricing = [
-            Pricing(classroom_number="101", price_per_hour=1500.00),
-            Pricing(classroom_number="201", price_per_hour=2000.00),
-            Pricing(classroom_number="301", price_per_hour=3000.00),
-            Pricing(classroom_number="102", price_per_hour=1000.00)
+            Pricing(classroom_number="1", price_per_hour=1500.00),
+            Pricing(classroom_number="2", price_per_hour=2000.00),
+            Pricing(classroom_number="3", price_per_hour=3000.00),
+            Pricing(classroom_number="4", price_per_hour=1000.00)
         ]
 
         # Добавляем тестовые бронирования
         from datetime import datetime, timedelta
-        bookings = [
-            Booking(
-                classroom_number="101",
-                date=datetime.now() - timedelta(days=5),
-                duration=3,
-                description="Лекция по математике",
-                user_id=1,
-                status='approved',
-                total_cost=4500.00  # 1500 * 3
-            ),
-            Booking(
-                classroom_number="201",
-                date=datetime.now() - timedelta(days=3),
-                duration=2,
-                description="Практика по программированию",
-                user_id=1,
-                status='approved',
-                total_cost=4000.00  # 2000 * 2
-            ),
-            Booking(
-                classroom_number="301",
-                date=datetime.now() - timedelta(days=2),
-                duration=4,
-                description="Конференция",
-                user_id=2,
-                status='approved',
-                total_cost=12000.00  # 3000 * 4
-            ),
-            Booking(
-                classroom_number="101",
-                date=datetime.now() - timedelta(days=1),
-                duration=2,
-                description="Семинар",
-                user_id=1,
-                status='approved',
-                total_cost=3000.00  # 1500 * 2
-            ),
-            Booking(
-                classroom_number="201",
-                date=datetime.now(),
-                duration=3,
-                description="Лабораторная работа",
-                user_id=2,
-                status='approved',
-                total_cost=6000.00  # 2000 * 3
-            )
-        ]
+        # bookings = [
+        #     Booking(
+        #         classroom_number="101",
+        #         date=datetime.now() - timedelta(days=5),
+        #         duration=3,
+        #         description="Лекция по математике",
+        #         user_id=1,
+        #         status='approved',
+        #         total_cost=4500.00  # 1500 * 3
+        #     ),
+        #     Booking(
+        #         classroom_number="201",
+        #         date=datetime.now() - timedelta(days=3),
+        #         duration=2,
+        #         description="Практика по программированию",
+        #         user_id=1,
+        #         status='approved',
+        #         total_cost=4000.00  # 2000 * 2
+        #     ),
+        #     Booking(
+        #         classroom_number="301",
+        #         date=datetime.now() - timedelta(days=2),
+        #         duration=4,
+        #         description="Конференция",
+        #         user_id=2,
+        #         status='approved',
+        #         total_cost=12000.00  # 3000 * 4
+        #     ),
+        #     Booking(
+        #         classroom_number="101",
+        #         date=datetime.now() - timedelta(days=1),
+        #         duration=2,
+        #         description="Семинар",
+        #         user_id=1,
+        #         status='approved',
+        #         total_cost=3000.00  # 1500 * 2
+        #     ),
+        #     Booking(
+        #         classroom_number="201",
+        #         date=datetime.now(),
+        #         duration=3,
+        #         description="Лабораторная работа",
+        #         user_id=2,
+        #         status='approved',
+        #         total_cost=6000.00  # 2000 * 3
+        #     )
+        # ]
 
         # Добавляем все в сессию
         db.session.add_all(classrooms)
         db.session.add_all(users)
         db.session.add_all(pricing)
-        db.session.add_all(bookings)
+        #db.session.add_all(bookings)
         db.session.commit()
 
         print("✅ Тестовые данные успешно добавлены!")

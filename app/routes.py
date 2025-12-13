@@ -3,6 +3,7 @@
 """
 import os
 import json
+import logging
 from flask import jsonify, request
 from http import HTTPStatus
 import requests
@@ -11,11 +12,21 @@ from email_service import email_service
 from datetime import datetime, timedelta
 from sqlalchemy import func
 
-
+LESSONS_PATH="events/lessons"
+logging.basicConfig(level=logging.INFO)
 def init_routes(app):
     """
     Инициализация всех маршрутов приложения
     """
+    @app.before_request
+    def log_request():
+        """Логирование информации о запросе перед его обработкой"""
+        app.logger.info(f"Request: {request.method} {request.url}") 
+
+
+    @app.route('/')
+    def helloworld():
+        return "hello from schedule app"
 
     @app.route('/statistics/top_profitable_classrooms')
     def top_profitable_classrooms():
@@ -191,11 +202,13 @@ def init_routes(app):
     @app.route('/schedule/<int:aud_id>')
     def get_schedule(aud_id):
         # 1. Ищем аудиторию
+        app.logger.info("Ищем аудиторию")
         classroom = Classroom.query.get(aud_id)
         if not classroom:
             return jsonify({"error": "Аудитория не найдена"}), HTTPStatus.NOT_FOUND
 
         # 2. Загружаем бронирования из БД (только подтверждённые)
+        app.logger.info("Загружаем бронирования из БД")
         bookings = Booking.query.filter_by(
             classroom_number=classroom.id,
             status=True
@@ -216,9 +229,8 @@ def init_routes(app):
             booking_events.append(event)
 
         # 4. Загружаем внешние JSON события
-        events_path = os.path.join("events", f"{classroom.eios_id}.json")
+        events_path = os.path.join(LESSONS_PATH, f"{classroom.eios_id}.json")
         external_events = []
-
         if os.path.exists(events_path):
             with open(events_path, encoding='utf-8') as f:
                 try:

@@ -1,3 +1,4 @@
 venv/scripts/activate
 cd app
-uvicorn main:app --reload --port 8000
+waitress-serve --host=0.0.0.0 --port=8000 main:app
+pause
