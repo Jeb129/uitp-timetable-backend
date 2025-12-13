@@ -2,7 +2,7 @@
 Модели базы данных для University Management System
 """
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime
+from datetime import datetime, timedelta
 from sqlalchemy import Numeric
 
 # Инициализируем экземпляр SQLAlchemy
@@ -55,7 +55,7 @@ class Pricing(db.Model):
     __tablename__ = 'pricing'
 
     id = db.Column(db.Integer, primary_key=True)
-    classroom_number = db.Column(db.String(20), db.ForeignKey('classrooms.id'), nullable=False, unique=True)
+    classroom_number = db.Column(db.Integer, db.ForeignKey('classrooms.id'), nullable=False, unique=True)
     price_per_hour = db.Column(db.Numeric(10, 2), nullable=False)  # цена за час
 
     def __repr__(self):
@@ -66,7 +66,7 @@ class Schedule(db.Model):
     __tablename__ = 'schedules'
 
     id = db.Column(db.Integer, primary_key=True)
-    classroom_number = db.Column(db.String(20), db.ForeignKey('classrooms.id'), nullable=False)
+    classroom_number = db.Column(db.Integer, db.ForeignKey('classrooms.id'), nullable=False)
     lesson = db.Column(db.String(100), nullable=False)
     date = db.Column(db.DateTime, nullable=False)
 
@@ -78,8 +78,8 @@ class Booking(db.Model):
     __tablename__ = 'bookings'
 
     id = db.Column(db.Integer, primary_key=True)
-    classroom_number = db.Column(db.String(20), db.ForeignKey('classrooms.id'), nullable=False)
-    date = db.Column(db.DateTime, nullable=False)
+    classroom_number = db.Column(db.Integer, db.ForeignKey('classrooms.id'), nullable=False)
+    date_start = db.Column(db.DateTime, nullable=False)
     duration = db.Column(db.Integer, nullable=False)
     description = db.Column(db.Text)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
@@ -89,6 +89,7 @@ class Booking(db.Model):
 
     def __repr__(self):
         return f'<Booking {self.id}>'
+
 
 
 def init_db():

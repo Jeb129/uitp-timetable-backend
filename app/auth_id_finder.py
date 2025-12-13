@@ -6,8 +6,8 @@ import requests
 # --- 1. Конфигурация ---
 OUTPUT_FILE = "auth_id.txt"  # Файл для записи ID аудиторий с "Б"
 BASE_URL_ICAL = "https://eios.kosgos.ru/api/Rasp"
-START_ID = 3115136
-END_ID = 3130000
+START_ID = 3569500
+END_ID = 3570000
 REQUEST_DELAY = 0.3
 
 HEADERS = {
