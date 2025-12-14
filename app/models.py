@@ -27,10 +27,18 @@ class User(db.Model):
 
     def is_moderator(self):
         return self.role == 'moderator'
-
+    
     def __repr__(self):
         return f'<{self.role} {self.email}>'
-    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'email': self.email,
+            'role': self.role,
+            'confirmed': self.confirmed,
+            'created_at': self.created_at.isoformat() if self.created_at else None
+        }
+
 class Notification(db.Model):
     __tablename__ = 'notifications'
 
@@ -42,7 +50,15 @@ class Notification(db.Model):
 
     def __repr__(self):
         return f'<Notification {self.id}>'
-    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'message': self.message,
+            'type': self.type,
+            'created_at': self.created_at.isoformat() if self.created_at else None
+        }
+
 class Classroom(db.Model):
     __tablename__ = 'classrooms'
 
@@ -58,6 +74,22 @@ class Classroom(db.Model):
     def __repr__(self):
         return f'<Classroom {self.number}>'
     
+    def to_dict(self, include_bookings=False):
+        data = {
+            'id': self.id,
+            'eios_id': self.eios_id,
+            'number': self.number,
+            'equipment': self.equipment,
+            'capacity': self.capacity,
+            'description': self.description,
+            'price': self.price
+        }
+
+        if include_bookings:
+            data['bookings'] = [b.to_dict() for b in self.bookings]
+
+        return data
+
 class Booking(db.Model):
     __tablename__ = 'bookings'
 
@@ -72,11 +104,31 @@ class Booking(db.Model):
 
     created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
     total_cost = db.Column(db.Numeric(10, 2),default=0.0)  # общая стоимость бронирования
- 
-    def __repr__(self):
-        return f'<Бронирование {self.id}>'
+    
     def get_duration(self):
         return self.date_end - self.date_start
+    
+    def __repr__(self):
+        return f'<Бронирование {self.id}>'
+    
+    def to_dict(self, include_classroom=False):
+        data = {
+            'id': self.id,
+            'user_id': self.user_id,
+            'classroom_id': self.classroom_id,
+            'date_start': self.date_start.isoformat() if self.date_start else None,
+            'date_end': self.date_end.isoformat() if self.date_end else None,
+            'status': self.status,
+            'description': self.description,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'total_cost': float(self.total_cost) if self.total_cost is not None else 0.0,
+            'duration_minutes': int(self.get_duration().total_seconds() // 60)
+        }
+
+        if include_classroom:
+            data['classroom'] = self.classroom.to_dict()
+
+        return data
 
 def init_db():
     """Инициализация базы данных - создание всех таблиц"""
