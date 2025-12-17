@@ -76,22 +76,15 @@ def register():
 
 @auth_bp.route('/access', methods=['POST'])
 def login():
-    current_app.logger.debug("попытка авторизации")
     data = request.get_json()
-    current_app.logger.debug(data)
-    current_app.logger.debug(data['email'])
     if not data or 'email' not in data or 'password' not in data:
         return jsonify({'message': 'Email and password required'}), 400
 
     user = User.query.filter_by(email=data['email']).first()
-    current_app.logger.debug(user)
-    current_app.logger.debug("3")
     if not user or not user.check_password(data['password']):
         return jsonify({'message': 'Invalid credentials'}), 401
-    current_app.logger.debug("4")
     access = create_access_token(user)
     refresh = create_refresh_token(user)
-    current_app.logger.debug("5")
     return jsonify({
         'access': access,
         'refresh': refresh
