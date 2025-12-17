@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify
 from http import HTTPStatus
 import requests
 from models import *
+from auth import jwt_required
 
 db_bp = Blueprint('db', __name__, url_prefix='/database')
 
@@ -33,6 +34,7 @@ def get(model_name):
     
 
 @db_bp.route("/update/<model_name>", methods=["POST"])
+@jwt_required
 def udate(model_name):
     model_name = model_name.lower()
 

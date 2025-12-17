@@ -1,5 +1,5 @@
-from flask import Flask
-from flask import request
+from flask import Flask, request
+from flask_cors import CORS
 import logging
 
 from models import db, add_sample_data, init_db
@@ -56,6 +56,7 @@ def create_app():
 
     return app
 app = create_app()
+CORS(app)
 
 def main():
     """Главная функция запуска приложения"""
