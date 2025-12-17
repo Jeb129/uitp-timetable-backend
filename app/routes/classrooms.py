@@ -9,7 +9,7 @@ from models import Classroom, Booking
 classroom_bp = Blueprint('classroom', __name__, url_prefix='/classroom')
 
 LESSONS_PATH="events/lessons"
-@classroom_bp.route('/schedule/<int:aud_id>', methods=['POST'])
+@classroom_bp.route('/schedule/<int:aud_id>', methods=['GET'])
 def get_schedule(aud_id):
         # 1. Ищем аудиторию
         classroom = Classroom.query.get(aud_id)
