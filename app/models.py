@@ -215,3 +215,10 @@ def add_sample_data():
     except Exception as e:
         db.session.rollback()
         print(f"❌ Ошибка при добавлении тестовых данных: {e}")
+
+WEB_ABLE_MODELS = {
+    "user": User,
+    "classroom": Classroom,
+    "notification": Notification,
+    "booking": Booking
+}

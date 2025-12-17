@@ -31,7 +31,7 @@ def decode_token(token):
         algorithms=['HS256']
     )
 #
-@auth_bp.route('/register/', methods=['POST'])
+@auth_bp.route('/register', methods=['POST'])
 def register():
     data = request.get_json()
 
@@ -62,7 +62,7 @@ def register():
         'message': 'User registered successfully'
     }), 201
 
-@auth_bp.route('/login/', methods=['POST'])
+@auth_bp.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
 
@@ -82,7 +82,7 @@ def login():
         'refresh': refresh
     }), 200
 
-@auth_bp.route('/refresh/', methods=['POST'])
+@auth_bp.route('/refresh', methods=['POST'])
 def refresh():
     data = request.get_json()
 
