@@ -1,5 +1,5 @@
-from flask import Flask
-from flask import request
+from flask import Flask, request
+from flask_cors import CORS
 import logging
 
 from models import db, add_sample_data, init_db
@@ -20,6 +20,7 @@ def init_routes(app: Flask):
     from routes.moodle import moodle_bp
     from routes.bookings import booking_bp
     from routes.classrooms import classroom_bp
+    from routes.database import db_bp
 
     @app.before_request
     def log_request():
@@ -30,6 +31,7 @@ def init_routes(app: Flask):
     app.register_blueprint(moodle_bp)
     app.register_blueprint(booking_bp)
     app.register_blueprint(classroom_bp)
+    app.register_blueprint(db_bp)
 
     @app.route('/')
     def helloworld():
@@ -54,12 +56,13 @@ def create_app():
 
     return app
 app = create_app()
+CORS(app)
 
 def main():
     """Главная функция запуска приложения"""
 
     print("Запуск University Management System...")
-    app.run(debug=True, host='0.0.0.0', port=5000, use_reloader=False)
+    app.run(debug=True, host='0.0.0.0', port=8000, use_reloader=True)
 
 
 if __name__ == '__main__':

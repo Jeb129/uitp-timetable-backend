@@ -11,7 +11,7 @@ class User(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    password_hash = db.Column(db.String(128), nullable=False)  # для хранения хеша пароля
+    password_hash = db.Column(db.String(512), nullable=False)  # для хранения хеша пароля
     role = db.Column(db.String(20), nullable=False, default='user')  # 'user', 'moderator', 'admin'
     confirmed = db.Column(db.Boolean, default=False)  # статус подтверждения СДО
     created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
@@ -215,3 +215,10 @@ def add_sample_data():
     except Exception as e:
         db.session.rollback()
         print(f"❌ Ошибка при добавлении тестовых данных: {e}")
+
+WEB_ABLE_MODELS = {
+    "user": User,
+    "classroom": Classroom,
+    "notification": Notification,
+    "booking": Booking
+}
