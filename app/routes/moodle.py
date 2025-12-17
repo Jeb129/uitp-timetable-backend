@@ -1,8 +1,8 @@
 from flask import Blueprint, request, jsonify
 import requests
 
-MOODLE_URL = "http://localhost:5002/webservice/rest/server.php" # Тут апи сдо должно быть но пока что локальное (кто хочет - ставьте сервер мудла себе сами.)
-MOODLE_TOKEN = "YOUR_MOODLE_TOKEN" # Аналогично предыдущему пункту нужен  токен от сдо с правами moodle/user:viewdetails.
+MOODLE_URL = "http://localhost:8080/webservice/rest/server.php" # Тут апи сдо должно быть но пока что локальное (кто хочет - ставьте сервер мудла себе сами.)
+MOODLE_TOKEN = "4137a05f4dd45307d408c29bb00a8189" # Аналогично предыдущему пункту нужен  токен от сдо с правами moodle/user:viewdetails.
 WS_FUNCTION = "core_user_get_users" # имя метода
 
 moodle_bp = Blueprint('moodle', __name__, url_prefix='/moodle')

@@ -6,11 +6,11 @@ from models import db, add_sample_data, init_db
 
 class Config:
     SECRET_KEY = 'super-secret-key'
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///timetable.db'
-    # SQLALCHEMY_DATABASE_URI = 'postgresql://postgres:admin123@localhost:5432/timetable'
+    SQLALCHEMY_DATABASE_URI = 'postgresql://postgres:postgres@localhost:5433/timetable'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 logging.basicConfig(level=logging.INFO)
+
 
 def init_routes(app: Flask):
     """
