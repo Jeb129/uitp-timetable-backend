@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from http import HTTPStatus
 import requests
 from models import *
-from auth import jwt_required
+from routes.auth import jwt_required
 
 db_bp = Blueprint('db', __name__, url_prefix='/database')
 
