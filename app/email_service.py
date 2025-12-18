@@ -5,10 +5,6 @@ import smtplib
 import email.mime.text
 import email.mime.multipart
 import os
-from dotenv import load_dotenv
-
-
-load_dotenv()
 
 class EmailService:
     def __init__(self):

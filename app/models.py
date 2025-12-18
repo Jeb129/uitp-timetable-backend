@@ -211,35 +211,6 @@ def add_sample_data():
             User(role="admin", email="@university.edu",password_hash=generate_password_hash("1234"))
         ]
         classrooms = parse_classrooms_xlsx("events/auds.xlsx")
-        # classrooms = [
-        #     Classroom(
-        #         id=1,
-        #         number="Б-101",
-        #         eios_id=3569734,
-        #         equipment="Проектор, маркерная доска, кондиционер",
-        #         capacity=30,
-        #         description="Аудитория для лекций и семинаров",
-        #         price=1000
-        #     ),
-        #     Classroom(
-        #         id=2,
-        #         number="Б-201",
-        #         eios_id=3569971,
-        #         equipment="Компьютеры, проектор, интерактивная доска",
-        #         capacity=25,
-        #         description="Компьютерный класс",
-        #         price=1000
-        #     ),
-        #     Classroom(
-        #         id=3,
-        #         number="Б-301",
-        #         eios_id=3593392,
-        #         equipment="Мультимедийная система, микрофоны",
-        #         capacity=50,
-        #         description="Конференц-зал",
-        #         price=1000
-        #     )
-        # ]
     
         bookings = [
             Booking(
