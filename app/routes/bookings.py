@@ -22,7 +22,7 @@ def get_booking():
         return jsonify({"error": f"{e}"}), HTTPStatus.INTERNAL_SERVER_ERROR       
 
 def create_admin_notification(booking, send = False):
-    admins = User.query.filter(role="admin").all()
+    admins = User.query.filter( User.role =="admin").all()
     if not admins:
         return []
     
@@ -91,7 +91,7 @@ def create_booking():
             notification.send()
 
             create_admin_notification(new_booking)
-            
+
             return jsonify({
                 'message': 'Booking created successfully',
                 'booking_id': new_booking.id,
