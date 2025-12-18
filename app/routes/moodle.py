@@ -35,6 +35,7 @@ def get_moodle_user():
 
         if data.get("users"):
             user.confirmed = True
+            user.role="kgu"
             db.session.commit()
 
         return jsonify(data), 200

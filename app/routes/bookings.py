@@ -28,7 +28,7 @@ def create_booking():
             data = request.get_json()
 
             # Проверяем обязательные поля
-            required_fields = ['classroom_number', 'date', 'duration', 'user_id']
+            required_fields = ['classroom_id', 'date_start', 'date_end', 'duration', 'user_id']
             for field in required_fields:
                 if field not in data:
                     return jsonify({'error': f'Missing required field: {field}'}), 400
@@ -39,33 +39,31 @@ def create_booking():
                 return jsonify({'error': 'User not found'}), 404
 
             # Проверяем существование аудитории
-            classroom = Classroom.query.get(data['classroom_number'])
+            classroom = Classroom.query.get(data['classroom_id'])
             if not classroom:
                 return jsonify({'error': 'Classroom not found'}), 404
 
             # Получаем цену за аудиторию
-
-            # Рассчитываем общую стоимость
-            # Создаем бронирование
+            date_start=datetime.fromisoformat(data['date_start'].replace('Z', '+00:00')),
+            date_end=datetime.fromisoformat(data['date_end'].replace('Z', '+00:00')),
+            
             new_booking = Booking(
-                classroom_number=data['classroom_number'],
-                date=datetime.fromisoformat(data['date'].replace('Z', '+00:00')),
-                duration=data['duration'],
-                description=data.get('description', ''),
                 user_id=data['user_id'],
-                status='pending',
-                total_cost=1000
+                classroom_id=data['classroom_id'],
+                date_start=date_start,
+                date_end=date_end,
+                description=data.get('description', ''),
+                total_cost=classroom.get_cost((date_end-date_start).total_hours())
             )
 
             db.session.add(new_booking)
             db.session.commit()
 
-            # ... остальной код создания бронирования (уведомления, emails) ...
+            
 
             return jsonify({
                 'message': 'Booking created successfully',
                 'booking_id': new_booking.id,
-                'status': new_booking.status,
                 'total_cost': float(1000)
             }), 201
 
