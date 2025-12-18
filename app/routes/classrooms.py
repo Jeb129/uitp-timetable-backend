@@ -68,7 +68,7 @@ def top_profitable_classrooms():
         ).join(
             Booking, Classroom.id == Booking.classroom_id
         ).filter(
-            Booking.status == 'approved'  # Учитываем только подтвержденные бронирования
+            Booking.status == True  # Учитываем только подтвержденные бронирования
         ).group_by(
             Classroom.number, Classroom.description, Classroom.capacity, 
         ).order_by(

@@ -21,6 +21,26 @@ def get_booking():
     except Exception as e:
         return jsonify({"error": f"{e}"}), HTTPStatus.INTERNAL_SERVER_ERROR       
 
+def create_admin_notification(booking, send = False):
+    admins = User.query.filter(role="admin").all()
+    if not admins:
+        return []
+    
+    notifications = []
+    for a in admins:
+        notifications.append(
+            Notification(
+                user_id = a.id,
+                subject = f"Новое бронирование", 
+                message = 
+                f'''Зарегистрирована заявка на бронированиепод номером № {booking.id}'''
+                )
+            )
+    db.session.add_all(notifications)
+    db.session.commit()
+    if send: 
+        for n in notifications: n.send()
+
 @booking_bp.route("/create",methods=["POST"])
 def create_booking():
         """Создание нового бронирования с автоматическим расчетом стоимости"""
@@ -49,7 +69,7 @@ def create_booking():
                 date_start=date_s,
                 date_end=date_e,
                 description=data.get('description', ''),
-                total_cost=classroom.get_cost((date_e-date_s).total_seconds()/3600)
+                total_cost=classroom.get_cost((date_e-date_s).total_seconds()/3600) if user.role == "user" else 0
             )
             db.session.add(new_booking)
             db.session.commit()
@@ -62,16 +82,20 @@ def create_booking():
                 Информация о мероприятии:
                 Аудитория: {classroom.number}
                 Время начала: {date_s}
-                Время окончания {date_e}'''
+                Время окончания {date_e}
+
+                Ожидайте решения администрации'''
                 )
             db.session.add(notification)
             db.session.commit()
             notification.send()
 
+            create_admin_notification(new_booking)
+            
             return jsonify({
                 'message': 'Booking created successfully',
                 'booking_id': new_booking.id,
-                'total_cost': float(1000)
+                'total_cost': float(new_booking.total_cost)
             }), 201
 
         except Exception as e:
