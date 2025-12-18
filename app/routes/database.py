@@ -34,7 +34,6 @@ def get(model_name):
     
 
 @db_bp.route("/update/<model_name>", methods=["POST"])
-@jwt_required
 def udate(model_name):
     model_name = model_name.lower()
 
@@ -56,6 +55,7 @@ def udate(model_name):
                 return jsonify({"error": f"Invalid field: {key}"}), HTTPStatus.NOT_FOUND
             setattr(item,key,value)
         db.session.commit()
+        return HTTPStatus.OK
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': f'Failed to update object: {str(e)}'}), HTTPStatus.INTERNAL_SERVER_ERROR  
