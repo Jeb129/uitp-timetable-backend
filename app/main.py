@@ -10,7 +10,7 @@ from models import db, add_sample_data, init_db
 
 class Config:
     SECRET_KEY = os.getenv('SECRET_KEY','super-secret-key')
-    SQLALCHEMY_DATABASE_URI = ("SQLALCHEMY_DATABASE_URI",'sqlite:///timetable.db')
+    SQLALCHEMY_DATABASE_URI = os.getenv("SQLALCHEMY_DATABASE_URI",'sqlite:///timetable.db')
     SQLALCHEMY_TRACK_MODIFICATIONS = os.getenv("SQLALCHEMY_TRACK_MODIFICATIONS",False)
 
 logging.basicConfig(level=logging.INFO)
