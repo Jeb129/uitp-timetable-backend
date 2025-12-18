@@ -2,10 +2,10 @@ from flask import Blueprint, request, jsonify
 from models import User
 import requests
 from extensions import db
+import os
 
-MOODLE_URL = "http://localhost:8080/webservice/rest/server.php" # Тут апи сдо должно быть но пока что локальное (кто хочет - ставьте сервер мудла себе сами.)
-MOODLE_TOKEN = "4137a05f4dd45307d408c29bb00a8189" # Аналогично предыдущему пункту нужен  токен от сдо с правами moodle/user:viewdetails.
-WS_FUNCTION = "core_user_get_users" # имя метода
+MOODLE_URL = os.getenv("MOODLE_URL","http://localhost:5002/webservice/rest/server.php" )# Тут апи сдо должно быть но пока что локальное (кто хочет - ставьте сервер мудла себе сами.)
+MOODLE_TOKEN = os.getenv("MOODLE_TOKEN","YOUR_MOODLE_TOKEN")  # Аналогично предыдущему пункту нужен  токен от сдо с правами moodle/user:viewdetails.
 
 moodle_bp = Blueprint('moodle', __name__, url_prefix='/moodle')
 
@@ -22,7 +22,7 @@ def get_moodle_user():
     
     params = {
         "wstoken": MOODLE_TOKEN,
-        "wsfunction": WS_FUNCTION,
+        "wsfunction": "core_user_get_users",
         "moodlewsrestformat": "json",
         "criteria[0][key]": "email",
         "criteria[0][value]": email,

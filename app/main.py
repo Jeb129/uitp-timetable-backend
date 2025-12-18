@@ -1,16 +1,19 @@
 from flask import Flask, request
 from flask_cors import CORS
 import logging
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 from models import db, add_sample_data, init_db
 
 class Config:
-    SECRET_KEY = 'super-secret-key'
-    SQLALCHEMY_DATABASE_URI = 'postgresql://postgres:postgres@localhost:5433/timetable'
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SECRET_KEY = os.getenv('SECRET_KEY','super-secret-key')
+    SQLALCHEMY_DATABASE_URI = ("SQLALCHEMY_DATABASE_URI",'sqlite:///timetable.db')
+    SQLALCHEMY_TRACK_MODIFICATIONS = os.getenv("SQLALCHEMY_TRACK_MODIFICATIONS",False)
 
 logging.basicConfig(level=logging.INFO)
-
 
 def init_routes(app: Flask):
     """
