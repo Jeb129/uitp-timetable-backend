@@ -33,7 +33,7 @@ def create_admin_notification(booking, send = False):
                 user_id = a.id,
                 subject = f"Новое бронирование", 
                 message = 
-                f'''Зарегистрирована заявка на бронированиепод номером № {booking.id}'''
+                f'''Зарегистрирована заявка на бронирова ниепод номером № {booking.id}'''
                 )
             )
     db.session.add_all(notifications)
