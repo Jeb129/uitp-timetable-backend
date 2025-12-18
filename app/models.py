@@ -172,7 +172,8 @@ def add_sample_data():
                 eios_id=3569734,
                 equipment="Проектор, маркерная доска, кондиционер",
                 capacity=30,
-                description="Аудитория для лекций и семинаров"
+                description="Аудитория для лекций и семинаров",
+                price=1000
             ),
             Classroom(
                 id=2,
@@ -180,7 +181,8 @@ def add_sample_data():
                 eios_id=3569971,
                 equipment="Компьютеры, проектор, интерактивная доска",
                 capacity=25,
-                description="Компьютерный класс"
+                description="Компьютерный класс",
+                price=1000
             ),
             Classroom(
                 id=3,
@@ -188,7 +190,8 @@ def add_sample_data():
                 eios_id=3593392,
                 equipment="Мультимедийная система, микрофоны",
                 capacity=50,
-                description="Конференц-зал"
+                description="Конференц-зал",
+                price=1000
             )
         ]
     

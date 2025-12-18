@@ -1,5 +1,5 @@
 from datetime import datetime
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from http import HTTPStatus
 
 from extensions import db
@@ -25,6 +25,7 @@ def get_booking():
 def create_booking():
         """Создание нового бронирования с автоматическим расчетом стоимости"""
         try:
+            current_app.logger.debug(1)
             data = request.get_json()
 
             # Проверяем обязательные поля
@@ -32,33 +33,32 @@ def create_booking():
             for field in required_fields:
                 if field not in data:
                     return jsonify({'error': f'Missing required field: {field}'}), 400
-
+            current_app.logger.debug(2)
             # Проверяем существование пользователя
             user = User.query.get(data['user_id'])
             if not user:
                 return jsonify({'error': 'User not found'}), 404
-
+            current_app.logger.debug(3)
             # Проверяем существование аудитории
             classroom = Classroom.query.get(data['classroom_id'])
             if not classroom:
                 return jsonify({'error': 'Classroom not found'}), 404
-
+            current_app.logger.debug(4)
             # Получаем цену за аудиторию
-            date_start=datetime.fromisoformat(data['date_start'].replace('Z', '+00:00')),
-            date_end=datetime.fromisoformat(data['date_end'].replace('Z', '+00:00')),
-            
+            date_s=datetime.fromisoformat(data['date_start'].replace('Z', '+00:00'))
+            date_e=datetime.fromisoformat(data['date_end'].replace('Z', '+00:00'))
+            current_app.logger.debug(5)
             new_booking = Booking(
                 user_id=data['user_id'],
                 classroom_id=data['classroom_id'],
-                date_start=date_start,
-                date_end=date_end,
+                date_start=date_s,
+                date_end=date_e,
                 description=data.get('description', ''),
-                total_cost=classroom.get_cost((date_end-date_start).total_hours())
+                total_cost=classroom.get_cost((date_e-date_s).total_seconds()/3600)
             )
-
+            
             db.session.add(new_booking)
             db.session.commit()
-
             
 
             return jsonify({
