@@ -1,6 +1,6 @@
 from datetime import datetime,timezone, timedelta
 from sqlalchemy import Numeric
-
+from email_service import email_service
 from openpyxl import load_workbook
 
 from extensions import db
@@ -44,12 +44,22 @@ class User(db.Model):
 
 class Notification(db.Model):
     __tablename__ = 'notifications'
-
+    
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    subject = db.Column(db.Text, default=id)
     message = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
-    type = db.Column(db.String(50), nullable=False, default='info')
+    status = db.Column(db.String(50), nullable=False, default='created')
+
+    def send(self):
+        email = User.query.get(self.user_id).email
+        if email_service.send_email(email,self.subject,self.message):
+            self.status = "sent"
+        else:
+            self.status = 'send error'
+        db.session.commit()
+        return self.status
 
     def __repr__(self):
         return f'<Notification {self.id}>'
@@ -57,8 +67,9 @@ class Notification(db.Model):
         return {
             'id': self.id,
             'user_id': self.user_id,
+            'subject': self.subject,
             'message': self.message,
-            'type': self.type,
+            'status': self.status,
             'created_at': self.created_at.isoformat() if self.created_at else None
         }
 
@@ -200,35 +211,6 @@ def add_sample_data():
             User(role="admin", email="@university.edu",password_hash=generate_password_hash("1234"))
         ]
         classrooms = parse_classrooms_xlsx("events/auds.xlsx")
-        # classrooms = [
-        #     Classroom(
-        #         id=1,
-        #         number="Б-101",
-        #         eios_id=3569734,
-        #         equipment="Проектор, маркерная доска, кондиционер",
-        #         capacity=30,
-        #         description="Аудитория для лекций и семинаров",
-        #         price=1000
-        #     ),
-        #     Classroom(
-        #         id=2,
-        #         number="Б-201",
-        #         eios_id=3569971,
-        #         equipment="Компьютеры, проектор, интерактивная доска",
-        #         capacity=25,
-        #         description="Компьютерный класс",
-        #         price=1000
-        #     ),
-        #     Classroom(
-        #         id=3,
-        #         number="Б-301",
-        #         eios_id=3593392,
-        #         equipment="Мультимедийная система, микрофоны",
-        #         capacity=50,
-        #         description="Конференц-зал",
-        #         price=1000
-        #     )
-        # ]
     
         bookings = [
             Booking(

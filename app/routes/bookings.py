@@ -51,10 +51,22 @@ def create_booking():
                 description=data.get('description', ''),
                 total_cost=classroom.get_cost((date_e-date_s).total_seconds()/3600)
             )
-            
             db.session.add(new_booking)
             db.session.commit()
-            
+            notification = Notification(
+                user_id = new_booking.user_id,
+                subject = f"Бронирование аудитории", 
+                message = 
+                f'''Ваша заявка зарегистрирована под номером № {new_booking.id}
+
+                Информация о мероприятии:
+                Аудитория: {classroom.number}
+                Время начала: {date_s}
+                Время окончания {date_e}'''
+                )
+            db.session.add(notification)
+            db.session.commit()
+            notification.send()
 
             return jsonify({
                 'message': 'Booking created successfully',
@@ -80,7 +92,11 @@ def change_boocking_status():
             
     booking.status = status
 
-    notification = Notification(user_id = booking.user_id, message = f"Заявка № {id} {"одобрена" if status else "отклонена"}.\n Комментарий модерации: {comment}")
+    notification = Notification(
+        user_id = booking.user_id,
+        subject = f"Обновление статуса бронирования {id}", 
+        message = f"Заявка № {id} {"одобрена" if status else "отклонена"}.\n Комментарий модерации: {comment}"
+        )
     db.session.add(notification)
     db.session.commit()
-
+    notification.send()
