@@ -25,29 +25,24 @@ def get_booking():
 def create_booking():
         """Создание нового бронирования с автоматическим расчетом стоимости"""
         try:
-            current_app.logger.debug(1)
             data = request.get_json()
 
             # Проверяем обязательные поля
-            required_fields = ['classroom_id', 'date_start', 'date_end', 'duration', 'user_id']
+            required_fields = ['classroom_id', 'date_start', 'date_end', 'description', 'user_id']
             for field in required_fields:
                 if field not in data:
                     return jsonify({'error': f'Missing required field: {field}'}), 400
-            current_app.logger.debug(2)
             # Проверяем существование пользователя
             user = User.query.get(data['user_id'])
             if not user:
                 return jsonify({'error': 'User not found'}), 404
-            current_app.logger.debug(3)
             # Проверяем существование аудитории
             classroom = Classroom.query.get(data['classroom_id'])
             if not classroom:
                 return jsonify({'error': 'Classroom not found'}), 404
-            current_app.logger.debug(4)
             # Получаем цену за аудиторию
             date_s=datetime.fromisoformat(data['date_start'].replace('Z', '+00:00'))
             date_e=datetime.fromisoformat(data['date_end'].replace('Z', '+00:00'))
-            current_app.logger.debug(5)
             new_booking = Booking(
                 user_id=data['user_id'],
                 classroom_id=data['classroom_id'],

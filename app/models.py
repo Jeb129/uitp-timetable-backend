@@ -1,5 +1,8 @@
 from datetime import datetime,timezone, timedelta
 from sqlalchemy import Numeric
+
+from openpyxl import load_workbook
+
 from extensions import db
 
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -151,6 +154,38 @@ def init_db():
     else:
         print("✅ Таблицы уже существуют в базе данных")
 
+
+
+def parse_classrooms_xlsx(file):
+    """
+    file — это либо путь к файлу, либо FileStorage (из Flask request.files)
+    """
+
+    wb = load_workbook(file, data_only=True)
+    ws = wb.active
+
+    # читаем заголовки
+    headers = [
+        cell.value.strip().lower()
+        for cell in next(ws.iter_rows(min_row=1, max_row=1))
+    ]
+    classrooms = []
+    for row in ws.iter_rows(min_row=2, values_only=True):
+        data = dict(zip(headers, row))
+
+        classroom = Classroom(
+            eios_id=data.get("eios_id"),
+            number=data.get("number"),
+            equipment=data.get("equipment"),
+            capacity=data.get("capacity"),
+            description=data.get("description"),
+            price=data.get("price"),
+        )
+
+        classrooms.append(classroom)
+    return classrooms
+
+
 def add_sample_data():
     try:
         db.session.query(User).delete()
@@ -164,36 +199,36 @@ def add_sample_data():
             User(role="moderator", email="moderator@university.edu",password_hash=generate_password_hash("1234")),
             User(role="admin", email="@university.edu",password_hash=generate_password_hash("1234"))
         ]
-
-        classrooms = [
-            Classroom(
-                id=1,
-                number="Б-101",
-                eios_id=3569734,
-                equipment="Проектор, маркерная доска, кондиционер",
-                capacity=30,
-                description="Аудитория для лекций и семинаров",
-                price=1000
-            ),
-            Classroom(
-                id=2,
-                number="Б-201",
-                eios_id=3569971,
-                equipment="Компьютеры, проектор, интерактивная доска",
-                capacity=25,
-                description="Компьютерный класс",
-                price=1000
-            ),
-            Classroom(
-                id=3,
-                number="Б-301",
-                eios_id=3593392,
-                equipment="Мультимедийная система, микрофоны",
-                capacity=50,
-                description="Конференц-зал",
-                price=1000
-            )
-        ]
+        classrooms = parse_classrooms_xlsx("events/auds.xlsx")
+        # classrooms = [
+        #     Classroom(
+        #         id=1,
+        #         number="Б-101",
+        #         eios_id=3569734,
+        #         equipment="Проектор, маркерная доска, кондиционер",
+        #         capacity=30,
+        #         description="Аудитория для лекций и семинаров",
+        #         price=1000
+        #     ),
+        #     Classroom(
+        #         id=2,
+        #         number="Б-201",
+        #         eios_id=3569971,
+        #         equipment="Компьютеры, проектор, интерактивная доска",
+        #         capacity=25,
+        #         description="Компьютерный класс",
+        #         price=1000
+        #     ),
+        #     Classroom(
+        #         id=3,
+        #         number="Б-301",
+        #         eios_id=3593392,
+        #         equipment="Мультимедийная система, микрофоны",
+        #         capacity=50,
+        #         description="Конференц-зал",
+        #         price=1000
+        #     )
+        # ]
     
         bookings = [
             Booking(
@@ -223,6 +258,8 @@ def add_sample_data():
     except Exception as e:
         db.session.rollback()
         print(f"❌ Ошибка при добавлении тестовых данных: {e}")
+
+
 
 WEB_ABLE_MODELS = {
     "user": User,
