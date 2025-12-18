@@ -12,7 +12,7 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(512), nullable=False)  # для хранения хеша пароля
-    role = db.Column(db.String(20), nullable=False, default='user')  # 'user', 'moderator', 'admin'
+    role = db.Column(db.String(20), nullable=False, default='user')  # 'user', 'kgu', 'admin'
     confirmed = db.Column(db.Boolean, default=False)  # статус подтверждения СДО
     created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
 
@@ -25,8 +25,8 @@ class User(db.Model):
     def is_admin(self):
         return self.role == 'admin'
 
-    def is_moderator(self):
-        return self.role == 'moderator'
+    def is_confirmed(self):
+        return self.role == 'kgu'
     
     def __repr__(self):
         return f'<{self.role} {self.email}>'
@@ -70,6 +70,9 @@ class Classroom(db.Model):
     description = db.Column(db.Text)
     price = db.Column(db.Integer)
     bookings = db.relationship('Booking', backref='classroom', lazy=True)
+
+    def get_cost(self, hours):
+        return self.price*hours
 
     def __repr__(self):
         return f'<Classroom {self.number}>'
@@ -196,7 +199,8 @@ def add_sample_data():
                 date_start = datetime.now(timezone.utc) - timedelta(days=2),
                 date_end = datetime.now(timezone.utc) - timedelta(days=2) + timedelta(hours=3),
                 description = "Конференция",
-                total_cost=4500.00,
+                status=True,
+                total_cost=4500.00
             ),
             Booking(
                 classroom_id = 2,
@@ -204,6 +208,7 @@ def add_sample_data():
                 date_start = datetime.now(timezone.utc) - timedelta(days=1),
                 date_end = datetime.now(timezone.utc) - timedelta(days=1) + timedelta(hours=1.5),
                 description = "мероприятие",
+                status=True
             ),
         ]
         
