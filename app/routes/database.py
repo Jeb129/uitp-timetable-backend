@@ -55,7 +55,7 @@ def udate(model_name):
                 return jsonify({"error": f"Invalid field: {key}"}), HTTPStatus.NOT_FOUND
             setattr(item,key,value)
         db.session.commit()
-        return HTTPStatus.OK
+        return jsonify({'status': f'{item} updated'}), HTTPStatus.OK
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': f'Failed to update object: {str(e)}'}), HTTPStatus.INTERNAL_SERVER_ERROR  
