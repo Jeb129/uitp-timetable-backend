@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from http import HTTPStatus
 import requests
 from models import *
@@ -46,14 +46,17 @@ def udate(model_name):
         if not filters:
             return jsonify({"error": "Update body wasn't specified"}), HTTPStatus.BAD_REQUEST
         
-        item = model.query.filter(getattr(model, "id") == filters["id"])
+        item = model.query.get(filters["id"])
         if not item:
             return jsonify({"error": f"{model_name} with id {filters["id"]} not found"}), HTTPStatus.NOT_FOUND
         
         for key, value in filters.items():
+            if key == "id":
+                continue
             if not hasattr(model, key):
                 return jsonify({"error": f"Invalid field: {key}"}), HTTPStatus.NOT_FOUND
             setattr(item,key,value)
+
         db.session.commit()
         return jsonify({'status': f'{item} updated'}), HTTPStatus.OK
     except Exception as e:
