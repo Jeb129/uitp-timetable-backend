@@ -124,3 +124,7 @@ def change_boocking_status():
     db.session.add(notification)
     db.session.commit()
     notification.send()
+    return jsonify({
+        'message': 'Booking status changed successfully',
+        'booking_id': booking.id,
+    }), 201
