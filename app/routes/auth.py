@@ -53,6 +53,7 @@ def jwt_required(f):
 
 @auth_bp.route('/register', methods=['POST'])
 def register():
+    print("Зашел в пост")
     data = request.get_json()
     if not data or 'email' not in data or 'password' not in data:
         return jsonify({'message': 'Email and password required'}), 400
