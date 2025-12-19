@@ -208,7 +208,7 @@ def add_sample_data():
             User(email="someone@mail.com",password_hash=generate_password_hash("1234")),
             User(email="student@university.edu",confirmed=True,password_hash=generate_password_hash("1234")),
             User(role="moderator", email="moderator@university.edu",password_hash=generate_password_hash("1234")),
-            User(role="admin", email="@university.edu",password_hash=generate_password_hash("1234"))
+            User(role="admin", email="123@university.edu",password_hash=generate_password_hash("1234"))
         ]
         classrooms = parse_classrooms_xlsx("events/auds.xlsx")
     
